@@ -1,0 +1,90 @@
+# All of the functions needed to run server.py
+
+import socket, sys, threading, subprocess
+
+def server_loop():
+    global target
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    #if no target is defined, listen on all interfaces
+    if target == None:
+        target = "0.0.0.0"
+
+    server.bind((target,port))
+    server.listen(5)
+    print "[*] Listening on %s:%d" % (target, port)
+
+    while True:
+        client_socket, addr = server.accept()
+
+        #thread to handle client
+        client_thread = threading.Thread(target=client_handler, args=(client_socket,))
+        client_thread.start()
+
+        print "listening..."
+        print port
+        if command == True:
+            print "commanding..."
+
+def client_handler(client_socket):
+    global upload
+    global execute
+    global command
+
+    #check for upload dest
+    if len(upload_destination):
+
+        #read all of the bytes, write to dest
+        file_buffer = ""
+
+        #receive until all data is read
+        while True:
+            data = client_socket.recv(1024)
+
+            if data == None:
+                break
+            else:
+                file_buffer += data
+
+        #take data and try to write it out
+        try:
+            file_writer = open(upload_destination,"w")
+            file_writer.write(file_buffer)
+            file_writer.close()
+
+            #acknowledge file was written
+            client_socket.send("Successfully saved file to %s\r\n" % upload_destination)
+        except:
+            client_socket.send("Failed to save file to %s\r\n" % upload_destination
+
+    #command to execute
+    if len(execute):
+		
+        #run command
+        output = run_command(execute)
+
+        client_socket.send(output)
+
+    #loop if command shell is requested
+    if command:
+
+        while True:
+            #prompt
+            client_socket.send("<SHELL:#>")
+
+            #receive until new line received
+            cmd_buffer = ""
+            while "\n" not in cmd_buffer:
+                    cmd_buffer += client_socket.recv(1024)
+
+             #send back command output
+              response = run_command(cmd_buffer)
+                               
+                               
+                               
+
+def client_sender(buffer):
+	return
+
+def run_command(command):
+	return
